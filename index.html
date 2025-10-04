@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LEO-SwapHub Animation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #canvas {
+            display: block;
+            background: radial-gradient(ellipse at center, #1a1f3a 0%, #0a0e27 100%);
+            
+        }
+
+        .controls {
+            position: relative;
+            top: 20px;
+            left: 50%;
+            width: 30%;
+            transform: translateX(-50%);
+            background: rgba(26, 31, 58, 0.9);
+            padding: 2px;
+            border-radius: 15px;
+            border: 2px solid #00d9ff;
+            z-index: 10;
+            text-align: center;
+            margin-top: 20;
+        }
+
+        .controls h1 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            color: #0a0e27;
+            border: none;
+            padding: 12px 25px;
+            margin: 5px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.5);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .info-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(26, 31, 58, 0.9);
+            padding: 15px 20px;
+            border-radius: 10px;
+            border: 1px solid #00d9ff;
+            max-width: 350px;
+        }
+
+        .info-panel h3 {
+            color: #00ff88;
+            margin-bottom: 10px;
+        }
+
+        .stat {
+            margin: 8px 0;
+            font-size: 0.95em;
+        }
+
+        .stat-label {
+            color: #00d9ff;
+            font-weight: bold;
+        }
+
+        .legend {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(26, 31, 58, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #00d9ff;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            font-size: 0.9em;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 2px solid #fff;
+        }
+
+        .status {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(26, 31, 58, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #00ff88;
+            text-align: center;
+        }
+
+        .status-text {
+            color: #00ff88;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <h1>🛰️ LEO-SwapHub Simulator</h1>
+        <button class="btn" onclick="initiateSwap()">INITIATE LEO-SWAP</button>
+        <button class="btn" onclick="resetSimulation()">Reset</button>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-color" style="background: #ff6b6b;"></div>
+            <span>Station Alpha (Needs Filament)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #4ecdc4;"></div>
+            <span>Station Beta (Has O₂ Surplus)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #ffd700;"></div>
+            <span>HyperMall Hub</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #00ff88;"></div>
+            <span>AAT (Automated Access Tug)</span>
+        </div>
+    </div>
+
+    <div class="info-panel">
+        <h3>Transaction Details</h3>
+        <div class="stat"><span class="stat-label">Total Swaps:</span> <span id="totalSwaps">0</span></div>
+        <div class="stat"><span class="stat-label">LCC Saved:</span> $<span id="lccSaved">0</span></div>
+        <div class="stat"><span class="stat-label">Alpha Filament:</span> <span id="alphaFilament">2</span> kg</div>
+        <div class="stat"><span class="stat-label">Beta O₂:</span> <span id="betaO2">15</span> kg</div>
+        <div class="stat"><span class="stat-label">Hub Balance:</span> <span id="hubBalance">0</span> LCC</div>
+    </div>
+
+    <div class="status">
+        <div class="status-text" id="statusText">Ready for Swap</div>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Stars
+        const stars = [];
+        for (let i = 0; i < 200; i++) {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 1.5,
+                opacity: Math.random()
+            });
+        }
+
+        // Earth
+        const earth = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: 80
+        };
+
+        // Stations
+        const stationAlpha = {
+            x: canvas.width / 2 - 250,
+            y: canvas.height / 2 - 150,
+            radius: 25,
+            color: '#ff6b6b',
+            filament: 2,
+            angle: 0
+        };
+
+        const stationBeta = {
+            x: canvas.width / 2 + 250,
+            y: canvas.height / 2 - 150,
+            radius: 25,
+            color: '#4ecdc4',
+            oxygen: 15,
+            angle: Math.PI
+        };
+
+        const hyperMall = {
+            x: canvas.width / 2,
+            y: canvas.height / 2 - 250,
+            radius: 35,
+            color: '#ffd700',
+            angle: Math.PI / 2
+        };
+
+        // AAT (Automated Access Tug)
+        const aat = {
+            x: hyperMall.x,
+            y: hyperMall.y,
+            radius: 15,
+            color: '#00ff88',
+            active: false,
+            path: [],
+            pathIndex: 0,
+            cargo: null
+        };
+
+        // Stats
+        let totalSwaps = 0;
+        let lccSaved = 0;
+        let animating = false;
+
+        // Orbit
+        const orbitRadius = 200;
+
+        function drawStars() {
+            stars.forEach(star => {
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+                ctx.fill();
+                
+                // Twinkle
+                star.opacity += (Math.random() - 0.5) * 0.1;
+                star.opacity = Math.max(0.2, Math.min(1, star.opacity));
+            });
+        }
+
+        function drawEarth() {
+            // Earth
+            const gradient = ctx.createRadialGradient(earth.x, earth.y, 0, earth.x, earth.y, earth.radius);
+            gradient.addColorStop(0, '#4a90e2');
+            gradient.addColorStop(0.5, '#357abd');
+            gradient.addColorStop(1, '#1e4d7a');
+            
+            ctx.beginPath();
+            ctx.arc(earth.x, earth.y, earth.radius, 0, Math.PI * 2);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            // Clouds
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.beginPath();
+            ctx.arc(earth.x - 20, earth.y - 20, 15, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(earth.x + 30, earth.y + 10, 20, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Label
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('EARTH', earth.x, earth.y + earth.radius + 20);
+        }
+
+        function drawOrbit() {
+            ctx.beginPath();
+            ctx.arc(earth.x, earth.y, orbitRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(0, 217, 255, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        function drawStation(station, label, resourceText) {
+            // Station body
+            const gradient = ctx.createRadialGradient(station.x, station.y, 0, station.x, station.y, station.radius);
+            gradient.addColorStop(0, station.color);
+            gradient.addColorStop(1, adjustColor(station.color, -30));
+            
+            ctx.beginPath();
+            ctx.arc(station.x, station.y, station.radius, 0, Math.PI * 2);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Solar panels
+            ctx.fillStyle = '#4a5568';
+            ctx.fillRect(station.x - station.radius - 10, station.y - 5, 10, 10);
+            ctx.fillRect(station.x + station.radius, station.y - 5, 10, 10);
+
+            // Label
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(label, station.x, station.y - station.radius - 15);
+            
+            // Resource
+            ctx.font = '12px Arial';
+            ctx.fillStyle = '#00ff88';
+            ctx.fillText(resourceText, station.x, station.y + station.radius + 20);
+
+            // Glow effect
+            if (animating && station === stationAlpha) {
+                ctx.beginPath();
+                ctx.arc(station.x, station.y, station.radius + 5, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(255, 107, 107, 0.5)';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            }
+        }
+
+        function drawHyperMall() {
+            // Hub body with glow
+            const gradient = ctx.createRadialGradient(hyperMall.x, hyperMall.y, 0, hyperMall.x, hyperMall.y, hyperMall.radius);
+            gradient.addColorStop(0, '#ffd700');
+            gradient.addColorStop(0.6, '#ffed4e');
+            gradient.addColorStop(1, '#e6b800');
+            
+            ctx.beginPath();
+            ctx.arc(hyperMall.x, hyperMall.y, hyperMall.radius, 0, Math.PI * 2);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Outer glow
+            ctx.beginPath();
+            ctx.arc(hyperMall.x, hyperMall.y, hyperMall.radius + 8, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(255, 215, 0, 0.3)';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            // Hub symbol
+            ctx.fillStyle = '#0a0e27';
+            ctx.font = 'bold 20px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('H', hyperMall.x, hyperMall.y);
+
+            // Label
+            ctx.fillStyle = '#ffd700';
+            ctx.font = 'bold 16px Arial';
+            ctx.textBaseline = 'alphabetic';
+            ctx.fillText('HyperMall Hub', hyperMall.x, hyperMall.y - hyperMall.radius - 15);
+        }
+
+        function drawAAT() {
+            if (!aat.active) return;
+
+            // AAT body
+            ctx.beginPath();
+            ctx.arc(aat.x, aat.y, aat.radius, 0, Math.PI * 2);
+            ctx.fillStyle = aat.color;
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Thrusters
+            ctx.fillStyle = '#ff6b6b';
+            ctx.beginPath();
+            ctx.arc(aat.x - 8, aat.y + 8, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(aat.x + 8, aat.y + 8, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Cargo indicator
+            if (aat.cargo) {
+                ctx.fillStyle = '#fff';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(aat.cargo, aat.x, aat.y - aat.radius - 8);
+            }
+        }
+
+        function drawConnections() {
+            ctx.strokeStyle = 'rgba(0, 217, 255, 0.2)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+
+            // Hub to stations
+            ctx.beginPath();
+            ctx.moveTo(hyperMall.x, hyperMall.y);
+            ctx.lineTo(stationAlpha.x, stationAlpha.y);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(hyperMall.x, hyperMall.y);
+            ctx.lineTo(stationBeta.x, stationBeta.y);
+            ctx.stroke();
+
+            ctx.setLineDash([]);
+        }
+
+        function adjustColor(color, amount) {
+            return '#' + color.replace(/^#/, '').replace(/../g, color => ('0'+Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)).substr(-2));
+        }
+
+        function updateStatus(text) {
+            document.getElementById('statusText').textContent = text;
+        }
+
+        function updateStats() {
+            document.getElementById('totalSwaps').textContent = totalSwaps;
+            document.getElementById('lccSaved').textContent = lccSaved.toLocaleString();
+            document.getElementById('alphaFilament').textContent = stationAlpha.filament;
+            document.getElementById('betaO2').textContent = stationBeta.oxygen;
+            document.getElementById('hubBalance').textContent = (totalSwaps * 125000).toLocaleString();
+        }
+
+        function initiateSwap() {
+            if (animating) return;
+            if (stationBeta.oxygen < 5) {
+                updateStatus('❌ Insufficient O₂ at Beta');
+                return;
+            }
+
+            animating = true;
+            updateStatus('🔄 Swap Initiated...');
+
+            // Create path: Hub -> Beta (collect O2) -> Alpha (deliver Filament)
+            aat.path = [
+                { x: hyperMall.x, y: hyperMall.y, action: 'start' },
+                { x: stationBeta.x, y: stationBeta.y, action: 'collect', resource: 'O₂' },
+                { x: hyperMall.x, y: hyperMall.y, action: 'process' },
+                { x: stationAlpha.x, y: stationAlpha.y, action: 'deliver', resource: 'Filament' },
+                { x: hyperMall.x, y: hyperMall.y, action: 'complete' }
+            ];
+            aat.pathIndex = 0;
+            aat.active = true;
+            aat.x = hyperMall.x;
+            aat.y = hyperMall.y;
+        }
+
+        function resetSimulation() {
+            animating = false;
+            aat.active = false;
+            aat.pathIndex = 0;
+            aat.cargo = null;
+            totalSwaps = 0;
+            lccSaved = 0;
+            stationAlpha.filament = 2;
+            stationBeta.oxygen = 15;
+            updateStats();
+            updateStatus('Ready for Swap');
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawStars();
+            drawOrbit();
+            drawEarth();
+            drawConnections();
+            drawStation(stationAlpha, 'Station Alpha', `Filament: ${stationAlpha.filament}kg`);
+            drawStation(stationBeta, 'Station Beta', `O₂: ${stationBeta.oxygen}kg`);
+            drawHyperMall();
+            drawAAT();
+
+            // Animate AAT
+            if (aat.active && aat.path.length > 0) {
+                const target = aat.path[aat.pathIndex];
+                const dx = target.x - aat.x;
+                const dy = target.y - aat.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < 5) {
+                    // Reached waypoint
+                    if (target.action === 'collect') {
+                        aat.cargo = target.resource;
+                        stationBeta.oxygen -= 5;
+                        updateStatus('📦 Collected 5kg O₂ from Beta');
+                        updateStats();
+                    } else if (target.action === 'process') {
+                        updateStatus('⚙️ Processing at HyperMall...');
+                        aat.cargo = 'Filament';
+                    } else if (target.action === 'deliver') {
+                        stationAlpha.filament += 5;
+                        aat.cargo = null;
+                        updateStatus('✅ Delivered 5kg Filament to Alpha');
+                        updateStats();
+                    } else if (target.action === 'complete') {
+                        totalSwaps++;
+                        lccSaved += 125000; // 5kg * $25,000
+                        updateStats();
+                        updateStatus('✅ Swap Complete!');
+                        animating = false;
+                        aat.active = false;
+                    }
+
+                    aat.pathIndex++;
+                    if (aat.pathIndex >= aat.path.length) {
+                        aat.active = false;
+                        animating = false;
+                    }
+                } else {
+                    // Move towards target
+                    const speed = 3;
+                    aat.x += (dx / distance) * speed;
+                    aat.y += (dy / distance) * speed;
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        // Handle resize
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            earth.x = canvas.width / 2;
+            earth.y = canvas.height / 2;
+            stationAlpha.x = canvas.width / 2 - 250;
+            stationAlpha.y = canvas.height / 2 - 150;
+            stationBeta.x = canvas.width / 2 + 250;
+            stationBeta.y = canvas.height / 2 - 150;
+            hyperMall.x = canvas.width / 2;
+            hyperMall.y = canvas.height / 2 - 250;
+        });
+
+        updateStats();
+        animate();
+    </script>
+</body>
+</html>
