@@ -22,26 +22,24 @@
         #canvas {
             display: block;
             background: radial-gradient(ellipse at center, #1a1f3a 0%, #0a0e27 100%);
-            
         }
 
         .controls {
-            position: relative;
-            top: 20px;
+            position: absolute;
+            top: 10px;
             left: 50%;
-            width: 30%;
             transform: translateX(-50%);
             background: rgba(26, 31, 58, 0.9);
-            padding: 2px;
+            padding: 15px;
             border-radius: 15px;
             border: 2px solid #00d9ff;
             z-index: 10;
             text-align: center;
-            margin-top: 20;
+            max-width: 90%;
         }
 
         .controls h1 {
-            font-size: 1.5em;
+            font-size: 1.3em;
             margin-bottom: 10px;
             background: linear-gradient(135deg, #00d9ff, #00ff88);
             -webkit-background-clip: text;
@@ -72,23 +70,25 @@
 
         .info-panel {
             position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(26, 31, 58, 0.9);
-            padding: 15px 20px;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(26, 31, 58, 0.95);
+            padding: 12px 15px;
             border-radius: 10px;
             border: 1px solid #00d9ff;
-            max-width: 350px;
+            max-width: 300px;
+            font-size: 0.9em;
         }
 
         .info-panel h3 {
             color: #00ff88;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
+            font-size: 1em;
         }
 
         .stat {
-            margin: 8px 0;
-            font-size: 0.95em;
+            margin: 6px 0;
+            font-size: 0.85em;
         }
 
         .stat-label {
@@ -98,44 +98,153 @@
 
         .legend {
             position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(26, 31, 58, 0.9);
-            padding: 15px;
+            top: 10px;
+            right: 10px;
+            background: rgba(26, 31, 58, 0.95);
+            padding: 12px;
             border-radius: 10px;
             border: 1px solid #00d9ff;
+            max-width: 250px;
         }
 
         .legend-item {
             display: flex;
             align-items: center;
-            margin: 8px 0;
-            font-size: 0.9em;
+            margin: 6px 0;
+            font-size: 0.8em;
         }
 
         .legend-color {
-            width: 20px;
-            height: 20px;
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
-            margin-right: 10px;
+            margin-right: 8px;
             border: 2px solid #fff;
+            flex-shrink: 0;
         }
 
         .status {
             position: absolute;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(26, 31, 58, 0.9);
-            padding: 15px;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(26, 31, 58, 0.95);
+            padding: 12px;
             border-radius: 10px;
             border: 1px solid #00ff88;
             text-align: center;
+            max-width: 200px;
         }
 
         .status-text {
             color: #00ff88;
-            font-size: 1.1em;
+            font-size: 0.95em;
             font-weight: bold;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .controls {
+                top: 5px;
+                padding: 10px;
+            }
+
+            .controls h1 {
+                font-size: 1em;
+                margin-bottom: 8px;
+            }
+
+            .btn {
+                padding: 8px 15px;
+                margin: 3px;
+                font-size: 0.85em;
+            }
+
+            .legend {
+                top: auto;
+                bottom: 140px;
+                right: 5px;
+                left: 5px;
+                max-width: none;
+                padding: 8px;
+            }
+
+            .legend-item {
+                font-size: 0.7em;
+                margin: 4px 0;
+            }
+
+            .legend-color {
+                width: 12px;
+                height: 12px;
+            }
+
+            .info-panel {
+                bottom: 60px;
+                left: 5px;
+                right: 5px;
+                max-width: none;
+                padding: 8px 10px;
+            }
+
+            .info-panel h3 {
+                font-size: 0.9em;
+                margin-bottom: 6px;
+            }
+
+            .stat {
+                font-size: 0.75em;
+                margin: 4px 0;
+            }
+
+            .status {
+                bottom: 5px;
+                left: 5px;
+                right: 5px;
+                max-width: none;
+                padding: 8px;
+            }
+
+            .status-text {
+                font-size: 0.85em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .controls h1 {
+                font-size: 0.9em;
+            }
+
+            .btn {
+                padding: 6px 12px;
+                font-size: 0.75em;
+            }
+
+            .legend-item span {
+                font-size: 0.65em;
+            }
+        }
+
+        /* Landscape mobile */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .controls {
+                padding: 5px;
+                top: 2px;
+            }
+
+            .controls h1 {
+                font-size: 0.8em;
+                margin-bottom: 5px;
+            }
+
+            .btn {
+                padding: 5px 10px;
+                font-size: 0.7em;
+            }
+
+            .legend, .info-panel, .status {
+                font-size: 0.7em;
+                padding: 5px;
+            }
         }
     </style>
 </head>
